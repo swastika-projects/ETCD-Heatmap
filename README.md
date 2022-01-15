@@ -9,6 +9,8 @@ The technologies used are : `Prometheus`, `Node Exporter`, `Grafana` and `Kubern
 3. [Grafana](https://grafana.com/docs/) is a powerful visualization and analytics tool for time series data. We can access the time series data scrapped and stored by Prometheus and perform various transformations on them and analyse it on this platform.
 4. [Kubernetes](https://kubernetes.io/docs/home/) is a container orchestration tool that manages the deployment, up-scaling, down-scaling, etc of containerized applications. 
 
+## Why is it required?
+
 Firstly, why should such monitoring be required if Grafana provides developers with amusing graphs and visualizations of time series data? To answer that, let’s take an example to monitor ETCD within a kubernetes cluster. The basic metrics one would go for would be : Client Traffic in, Leader elections,etc. Imagine the hassle of going through each graph and observing discrepancies, and over that, imagine having to do that for ‘n’ number of cluster instances. The heatmap visualization would culminate all of the above and more to provide developers and testers with one stop destination to monitor their clusters. 
 
 ## Steps to build the heatmap
