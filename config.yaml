@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubermatic.io/chart: heatmap-etcd
+    prometheus.io/port: "9100"
+    prometheus.io/scrape: "true"
+  labels:
+    app: heatmap-etcd
+  name: heatmap-etcd
+  namespace: monitoring
+spec:
+  containers:
+  - name: heatmap-etcd
+#    args: ["--collector.disable-defaults --collector.textfile.directory=/python_test/src"]
+#    - --collector.textfile.directory=/python_test/src
+    image: bejoyr/heatmapvsoc:v3
+    command: ["/bin/bash"]
+#    args: ["-c", "while true; do echo hello; sleep 10;done"]
+    args: ["-c", "while true ; do  python3 heatmap.py > /python_test/src/heat.prom ; sleep 15; done"]
+#    args: ["-c /bin/entrypt.sh" ]
+    imagePullPolicy: Always
+    env:
+    - name: PROMETHEUS_IP
+      value: prometheus.monitoring
