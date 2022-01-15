@@ -17,7 +17,9 @@ Firstly, why should such monitoring be required if Grafana provides developers w
 3. Install Hourly heatmap plugin on grafana
    Hourly heatmap aggregates data into buckets of day and hour to analyse activity or traffic during the day. It can easily be installed in a few steps. 
    [Click Here](https://grafana.com/grafana/plugins/marcusolsson-hourly-heatmap-panel/?tab=installation) to go to the website for installation guide. 
-   Once installed, it should be visible on your Grafana port right away under different types of visualizations. ![image1](https://user-images.githubusercontent.com/83866176/149631560-5564ba48-38ec-4b75-a31e-8ebd426a3d0f.png)
+   Once installed, it should be visible on your Grafana port right away under different types of visualizations. 
+   
+   ![image1](https://user-images.githubusercontent.com/83866176/149631560-5564ba48-38ec-4b75-a31e-8ebd426a3d0f.png)
 4. Build a docker image to get custom metrics from your kubernetes cluster.
    
    *Dockerfile image* : bejoyr/heatmapvsoc:v3
