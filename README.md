@@ -23,191 +23,42 @@ Firstly, why should such monitoring be required if Grafana provides developers w
 4. Build a docker image to get custom metrics from your kubernetes cluster.
    
    *Dockerfile image* : bejoyr/heatmapvsoc:v3
-  ```
-  #FROM quay.io/prometheus/node-exporter:v1.1.2
-  FROM python:3.6
-  MAINTAINER unixwords.com
-
-  #Creating Application Source Code Directory
-  RUN mkdir -p /python_test/src
-  #Setting Home Directory for containers
-  WORKDIR /python_test/src
-  #Installing python dependencies
-  COPY ./pyapp/requirements.txt /python_test/src
-  #RUN pip install — no-cache-dir -r requirements.txt
-  RUN pip install -r requirements.txt
-  #Copying src code to Container
-  COPY ./pyapp/node_exporter /python_test/src/node_exporter
-  COPY ./pyapp/write-file.py /python_test/src/write-file.py
-  COPY ./pyapp/heatmap.py /python_test/src/heatmap.py
-  COPY ./pyapp/config.conf /python_test/src/config.conf
-  #Application Environment variables
-  ENV APP_ENV development
-  #Exposing Ports
-  #EXPOSE 4025
-  #Setting Persistent data
-  #VOLUME [“/app-data”]
-  #Running Python Application
-  #CMD [“python3”, “write-file.py”]
-  CMD [ "/bin/sh" ]
-  ```
-  Contents of the Dockerfile :
-  - config file : This file contains the weights that can be adjusted according to the priority of the metrics aggregated for our monitoring model.
+   
+    Contents of the Dockerfile :
+   - config file : This file contains the weights that can be adjusted according to the priority of the metrics aggregated for our monitoring model.
     The metrics used for the process are : `Etcd_wal_fsync`, `etcd_db_fsync`, `etcd_file_descriptor`, `etcd_leader_election`, `etcd_client_trafffic_in`, `etcd_database_size`. 
 
-    A sample config file : 
-    ```
-    [weights]
-    wt_etcd_wal_fsync = 0.3
-    wt_etcd_db_fsync = 0.2
-    wt_etcd_file_descriptor = 0.1
-    wt_etcd_leader_election = 0.3
-    wt_etcd_client_traffic_in = 0.05
-    wt_etcd_database_size = 0.05
+       A sample config file : 
+       ```
+       [weights]
+       wt_etcd_wal_fsync = 0.3
+       wt_etcd_db_fsync = 0.2
+       wt_etcd_file_descriptor = 0.1
+       wt_etcd_leader_election = 0.3
+       wt_etcd_client_traffic_in = 0.05
+       wt_etcd_database_size = 0.05
 
-    [time]
-    duration='[1h]'
-    ```
-  - Python file to generate custom metrics for node exporter to expose
-    ```
-    #!/usr/bin/env python3
-    import datetime
-    import time
-    import requests
-    from csv import writer
-    from csv import reader
-    from decimal import Decimal
-    import os
-    import configparser
-
-    PROMETHEUS = 'http://prometheus-service.monitoring:9090/'
-
-    parser = configparser.ConfigParser()
-    parser.read("./config.conf")
-
-    wt_etcd_wal_fsync = parser["weights"]["wt_etcd_wal_fsync"]
-    wt_etcd_db_fsync = parser["weights"]["wt_etcd_db_fsync"]
-    wt_etcd_file_descriptor = parser["weights"]["wt_etcd_file_descriptor"]
-    wt_etcd_leader_election = parser["weights"]["wt_etcd_leader_election"]
-    wt_etcd_client_traffic_in = parser["weights"]["wt_etcd_client_traffic_in"]
-    wt_etcd_database_size = parser["weights"]["wt_etcd_database_size"]
-
-    duration = parser["time"]["duration"]
-
-    #print(wt_etcd_wal_fsync)
-    #print(wt_etcd_db_fsync)
-    #print(wt_etcd_file_descriptor)
-    #print(wt_etcd_leader_election)
-    #print(wt_etcd_client_traffic_in)
-    #print(wt_etcd_database_size)
-    #print(duration)
-    
-    metrics = ['etcd_wal_fsync','etcd_db_fsync','etcd_file_descriptor','etcd_leader_election','etcd_client_traffic_in','etcd_database_size']
-
-    #Get response for each metric from Prometheus
-    response_wal = requests.get(PROMETHEUS + '/api/v1/query',
-      params={
-        'query': 'job:etcd_disk_wal_fsync_duration_seconds_bucket:99percentile'})
-    etcd_wal_fsync  = response_wal.json()['data']['result']
-
-    response_db = requests.get(PROMETHEUS + '/api/v1/query',
-      params={
-        'query': 'job:etcd_disk_backend_commit_duration_seconds_bucket:99percentile'})
-    etcd_db_fsync  = response_db.json()['data']['result']
-
-    response_file_descriptor = requests.get(PROMETHEUS + '/api/v1/query',
-      params={
-        'query': 'job:process_open_fds:clone{instance=~"etcd-.+"}'})
-    etcd_file_descriptor  = response_file_descriptor.json()['data']['result']
-
-    response_leader_election = requests.get(PROMETHEUS + '/api/v1/query',
-      params={
-          'query': 'job:etcd_server_leader_changes_seen_total:changes1d'})
-    etcd_leader_election  = response_leader_election.json()['data']['result']
-
-    response_client_traffic_in = requests.get(PROMETHEUS + '/api/v1/query',
-      params={
-        'query': 'job:etcd_network_client_grpc_received_bytes_total:rate5m'})
-    etcd_client_traffic_in  = response_client_traffic_in.json()['data']['result']
-
-    response_database_size = requests.get(PROMETHEUS + '/api/v1/query',
-      params={
-        'query': 'job:etcd_debugging_mvcc_db_total_size_in_bytes:clone'})
-    etcd_database_size  = response_database_size.json()['data']['result']
-
-    etcd_wal_fsync = Decimal('{value[1]}'.format(**etcd_wal_fsync[0]))
-    etcd_db_fsync = Decimal('{value[1]}'.format(**etcd_db_fsync[0]))
-    etcd_file_descriptor = Decimal('{value[1]}'.format(**etcd_file_descriptor[0]))
-    etcd_leader_election = Decimal('{value[1]}'.format(**etcd_leader_election[0]))
-    etcd_client_traffic_in = Decimal('{value[1]}'.format(**etcd_client_traffic_in[0]))
-    etcd_database_size = Decimal('{value[1]}'.format(**etcd_database_size[0]))
-
-    #default scores of all metrics = 10
-    etcd_score_wal_fsync = 10
-    etcd_score_file_descriptor = 10
-    etcd_score_leader_election = 10
-    etcd_score_db_fsync = 10
-    etcd_score_database_size = 10
-    etcd_score_client_traffic_in = 10
-
-    #Danger wal fsync duration > 10ms
-    if etcd_wal_fsync > 0.01:
-        etcd_score_wal_fsync = 0
-
-    #Danger file descriptor > 1024
-    if etcd_file_descriptor > 1024:
-        etcd_score_file_descriptor = 0
-
-    #Danger leader elections > 5 per day
-    if etcd_leader_election > 5:
-        etcd_score_leader_election = 0
-
-    #Danger db_fsync > 40ms and Moderate danger 25-40ms
-    if etcd_db_fsync > 0.04:
-        etcd_score_db_fsync = 0
-    elif etcd_db_fsync < 0.04 and etcd_db_fsync > 0.025:
-        etcd_score_db_fsync = 5
-
-    etcd_score = Decimal(wt_etcd_wal_fsync) * etcd_score_wal_fsync + Decimal(wt_etcd_db_fsync) * etcd_score_db_fsync + Decimal(wt_etcd_file_descriptor) * etcd_score_file_descriptor + Decimal(wt_etcd_leader_election) * etcd_score_leader_election + Decimal(wt_etcd_client_traffic_in) * etcd_score_client_traffic_in + Decimal(wt_etcd_database_size) * etcd_score_database_size
-    
-    print('etcd_score',etcd_score)
-
-    ```
+       [time]
+       duration='[1h]'
+       ```
+   - Python file ```heatmap.py``` to generate custom metrics for node exporter to expose 
+     
+   
   The working is explained in the figure below and can be understood by observing the flow. The python file parses the configuration file to get the weights of the different metrics used for our monitoring. It then establishes a connection with the prometheus server which listens on port 9090 to get the values of metrics at that instant. The metric values then undergo a series of computational steps involving checking for thresholds to get the final etcd_score which is written into a special file(\*.prom) which would be used by node exporter to expose the custom metric value on its port from where prometheus can scrape it. This needs to be set up in a ***crontab*** fashion of events for the metric to insert data into the textfile-collector at regular intervals of time so that we get a time series data that can be visualized on grafana.
   (to enable textfile collector for custom metric we need to start node exporter with --collector.textfile.directory flag and set it equal to the special \*.prom file path)
 
-![image2](https://user-images.githubusercontent.com/83866176/149632085-d73cb9c0-9738-424e-beee-7fc167116349.png)
+  ![image2](https://user-images.githubusercontent.com/83866176/149632085-d73cb9c0-9738-424e-beee-7fc167116349.png)
 
    
-5. Configure the image into a pod on your kubernetes cluster using the dokcker image name.
-  ```
-  apiVersion: v1
-kind: Pod
-metadata:
-  annotations:
-    kubermatic.io/chart: heatmap-etcd
-    prometheus.io/port: "9100"
-    prometheus.io/scrape: "true"
-  labels:
-    app: heatmap-etcd
-  name: heatmap-etcd
-  namespace: monitoring
-spec:
-  containers:
-  - name: heatmap-etcd
-#    args: ["--collector.disable-defaults --collector.textfile.directory=/python_test/src"]
-#    - --collector.textfile.directory=/python_test/src
-    image: bejoyr/heatmapvsoc:v3
-    command: ["/bin/bash"]
-#    args: ["-c", "while true; do echo hello; sleep 10;done"]
-    args: ["-c", "while true ; do  python3 heatmap.py > /python_test/src/heat.prom ; sleep 15; done"]
-#    args: ["-c /bin/entrypt.sh" ]
-    imagePullPolicy: Always
-    env:
-    - name: PROMETHEUS_IP
-      value: prometheus.monitoring
-
-  ```
+5. Configure the image into a pod on your kubernetes cluster using the dokcker image name : ``bejoyr/heatmapvsoc:v3``
+   
+   We need to set this pod to run it's contents at regular intervals of time, we can do that by setting an argument in our yaml configuration file
+   ```
+   spec:
+     container:
+     -name : <INSERT NAME>
+        args: ["-c", "while true ; do  python3 heatmap.py > /python_test/src/heat.prom ; sleep 15; done"]
+   ```
 
 6. Get the values for the custom metric on prometheus as a time series data
 
