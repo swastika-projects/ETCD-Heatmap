@@ -1,5 +1,5 @@
 # Heatmap to monitor ETCD health
-Here, in this document I try to explain the steps and technologies behind coming up with an etcd-monitoring heatmap which could help anyone to predict if the cluster is healthy just by looking at the colors on heatmap, with green indicating good and red indicating bad health respectively. 
+Here, in this document I try to explain the steps and technologies behind coming up with an etcd-monitoring heatmap which could help anyone to predict if the system/cluster is healthy just by looking at the colors on heatmap, with green indicating good and red indicating bad health respectively. 
 ![hourly heatmap-etcd](https://user-images.githubusercontent.com/83866176/149630777-46792f3d-e084-4791-b686-44465310ceba.png)
 
 The technologies used are : `Prometheus`, `Node Exporter`, `Grafana` and `Kubernetes`.
@@ -59,7 +59,7 @@ Firstly, why should such monitoring be required if Grafana provides developers w
    spec:
      container:
      -name : <INSERT NAME>
-        args: ["-c", "while true ; do  python3 heatmap.py > /python_test/src/heat.prom ; sleep 15; done"]
+        args: ["-c", "while true ; do  python3 heatmap.py > <INSERT PATH TO *.prom FILE> ; sleep 15; done"]
    ```
 
 6. Get the values for the custom metric on prometheus as a time series data
