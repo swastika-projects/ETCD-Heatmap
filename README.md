@@ -16,7 +16,7 @@ Firstly, why should such monitoring be required if Grafana provides developers w
 ## Steps to build the heatmap
 1. Configure your system/instance with prometheus and enable node exporter. ([click here](https://netcorecloud.com/tutorials/setup-prometheus-and-exporters/) to follow the installation guide)
 2. Install and configure grafana ([click here](https://grafana.com/docs/grafana/latest/installation/debian/) for installation steps)
-3. Install Hourly heatmap plugin on grafana
+3. Install Hourly heatmap plugin on grafana.
    Hourly heatmap aggregates data into buckets of day and hour to analyse activity or traffic during the day. It can easily be installed in a few steps. 
    [Click Here](https://grafana.com/grafana/plugins/marcusolsson-hourly-heatmap-panel/?tab=installation) to go to the website for installation guide. 
    Once installed, it should be visible on your Grafana port right away under different types of visualizations. 
@@ -66,7 +66,7 @@ Firstly, why should such monitoring be required if Grafana provides developers w
 
 ![image5](https://user-images.githubusercontent.com/83866176/149632411-9ec13769-36e4-427d-b9d5-1302842de14b.png)
    
-7. Visualize the custom metric on hourly heatmap panel
+7. Visualize the custom metric on hourly heatmap panel.
    We can get the value for our custom metric by accessing it on grafana and selecting the visualization type to be ***Hourly Heatmap***. 
    To further customize and generalize our dashboard we can add variables to be able to filter and get different heatmaps for our  various clusters.
 
