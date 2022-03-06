@@ -75,6 +75,6 @@ Firstly, why should such monitoring be required if Grafana provides developers w
 ## Further Scope
 
 What we’ve done so far is to analyse the current time series data but what if we were able to predict when our instance will be down based on it’s past behaviour. That’s where machine learning and deep learning comes into picture. The scope is endless to come up with predictive algorithms to predict downtime and be ready with the preventive measures. I tried to train a day’s data for the metric `Disk WAL fsync duration` on the very famous state of the art model : **LSTM** which gave pretty good results. 
-Furthermore, the research and implementation could be extended to models such as **ARENA** and then be incorporated into the system for better predictive alerting mechanisms.
+Furthermore, the research and implementation could be extended to models such as **AREMA** and then be incorporated into the system for better predictive alerting mechanisms.
 
 ![image4](https://user-images.githubusercontent.com/83866176/149632574-7c65ae82-cbe0-4a98-9207-5c5db13f25b3.png)
