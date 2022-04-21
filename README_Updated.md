@@ -35,10 +35,14 @@
 The basic idea is to generate a custom metric which would be a weighted average of all the six essential metrics as mentioned in [section 1.3](#13-problem-statement). After we have the custom metric, let's say, *etcd_score*, we need to expose it using node exporter so that Prometheus is able to scrape it periodically. Grafana can then make use of the time series data of etcd_score and plot it using Hourly Heatmap visualization plugin. 
 ### 2.1 Selection of Metrics
 It's only logical to choose metrics that depict changes and are correlated to the component being monitored, i.e. etcd, in this case. ETCD deals with read and write transactions of each and everything that's happening on the clusters, hence making database sync, size and network traffic oriented metrics more significant to moving forward with our approach.
-- etcd_wal_fsync keeps track of Write Ahead Logs (WAL) 
-- etcd_db_fsync
-- etcd_database_size
-- etcd_file_descriptor
-- etcd_leader_election
-- etcd_client_traffic_in
+
+| Metric Name | Prefix | Description | Type |
+| --- | --- | --- | --- |
+| wal_fsync_duration | etcd_disk |  The latency distributions of fsync called by wal| Histogram|
+| backend_commit_duration | etcd_disk | The latency distributions of commit called by backend | Histogram | 
+| leader_changes_seen_total | etcd_server | Number of leader elections held | Counter |
+| client_grpc_received_bytes | etcd_network | The total number of bytes received to grpc clients | Counter |
+| mvcc_db_total_size | etcd_debugging | Total size of the database | Guage |
+| process_open_fds | - |  Number of open file descriptors| Gauge |
 ### 2.2 Need for weighted average
+
