@@ -91,15 +91,29 @@ As discussed earlier, we need a custom metric that should be a weighted average 
    
    *Dockerfile image* : bejoyr/heatmapvsoc:v3
    
-   **Contents of the Dockerfile** :
+   **Contents of the Dockerfile** :\
    **3.4.1** `weights.config` : This file contains the weights that can be adjusted according to the priority of the metrics aggregated for our monitoring model as discussed in [section 2.2]().
 
-       ```
    **3.4.2** `heatmap.py` : A python file which gets values of the six metrics from Prometheus and combines them according to the weights chosen for each in the `weights.config` file. This new custom metric will be exposed with the help of Node Exporter so that it can be scraped by Prometheus.
    
-   *MetricsToBeUsed* = [etcd_wal_fsync, etcd_db_fsync, etcd_file_descriptor, etcd_leader_election, etcd_client_trafffic_in, etcd_database_size]
-    
-    For every metric 'x' in MetricsToBeUsed
+  *MetricsToBeUsed* = [**etcd_wal_fsync, etcd_db_fsync, etcd_file_descriptor, etcd_leader_election, etcd_client_trafffic_in, etcd_database_size**]
+   
+   For every metric 'x' in *MetricsToBeUsed*\
+   &nbsp;&nbsp;&nbsp;&nbsp;    Get the current value of 'x' as scraped by Prometheus from from 9090\
+   &nbsp;&nbsp;&nbsp;&nbsp;    Get weight of 'x' from weights.config\
+   &nbsp;&nbsp;&nbsp;&nbsp;    Score 'x' based on it's Threshold value, i.e **Score 10** if it lies below it's maximum threshold and **Score 0** if otherwise\
+   &nbsp;&nbsp;&nbsp;&nbsp;    Multiply score of 'x' with it's weight to get *Weighted Scores*\
+   &nbsp;&nbsp;&nbsp;&nbsp;    Summation of all the weighted scores will give us the required custom metric, named here as, ***etcd_score***
+   
+   Threshold for each metric needs to be set according to the Kubernetes cluster usage. Here, I've used the following threshold values : 
+   ```
+   [Threshold]
+    etcd_wal_fsync < 10 ms
+    etcd_leader_election < 5
+    etcd_db_fsync in [25 ms, 40 ms]
+    etcd_file_descriptor < 1024
+   ```
+        
         
   
 The working is explained in the figure below and can be understood by observing the flow of events. Firstly, The python file parses the configuration file to get the weights of the different metrics used for our monitoring. It then establishes a connection with the prometheus server which listens on port 9090 to get the values of metrics at that instant. The metric values then undergo a series of computational steps involving checking for thresholds to get the final etcd_score which is written into a special file(\*.prom) which would be used by node exporter to expose the custom metric value on its port from where prometheus can scrape it. This needs to be set up in a ***crontab*** fashion of events for the metric to insert data into the textfile-collector at regular intervals of time so that we get a time series data that can be visualized on grafana.
