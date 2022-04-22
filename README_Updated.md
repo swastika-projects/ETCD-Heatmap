@@ -59,9 +59,17 @@ A sample config file (`weight.config`) illustrating the weight distribution of t
 ```
 [weights]
 wt_etcd_wal_fsync = 0.3
+wt_etcd_leader_election = 0.3
 wt_etcd_db_fsync = 0.2
 wt_etcd_file_descriptor = 0.1
-wt_etcd_leader_election = 0.3
 wt_etcd_client_traffic_in = 0.05
 wt_etcd_database_size = 0.05
 ```
+### 2.3 Hourly Heatmap and it's necessity
+By now we know that Prometheus scrapes system data with timestamps to generate a time series dataset for every component. Grafana uses this dataset to visually represent the values for a metric(or a combination of many metrics) using various visualization tools like : Line graph, Pie chart, Alert List, etc. [Click](https://grafana.com/grafana/plugins/?type=panel&pg=graf&plcmt=panels-txt) to view them all. 
+
+Of these, one is Hourly Heatmap. Heatmap as already defined earlier is a matrix of cells with colors indicating frequency or value of the bar height of corresponding histogram. Heatmaps can be an extremely effective monitoring tools due to their easy interpretability. To closely monitor ETCD's status with regard to each metric, we choose hourly heatmap which helps us generate a heatmap by aggregating data into buckets of day and hour. It offers flexibility to choose the bucket window size (60 min/30min), aggregation method (Mean/Sum/Count), etc to customize it according to our requirement. 
+
+Down below is an example of Hourly Heatmap taken from the [official website](https://grafana.com/grafana/plugins/marcusolsson-hourly-heatmap-panel/) to download the plugin. A carefull look at it shows how easy it is to get an overview of the chnages in value of a data over a day. The legend (Bar at the bottom with a scale of values) helps us determine which color on the heatmap corresponds to what value. 
+ ![sample heatmap](https://user-images.githubusercontent.com/83866176/164644215-1542ed15-54ea-4406-8231-c12bf9a54a77.jpg)
+
